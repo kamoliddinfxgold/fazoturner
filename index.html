@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turnirlar Ro'yxati</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <link rel="stylesheet" href="index.css">
+    
+</head>
+<body>
+    <!-- Mobile Sidebar Toggle Button -->
+    <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-layout" id="appLayout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div class="sidebar-title">Turnirlar Platformasi</div>
+                <div class="sidebar-subtitle">Barcha turnirlar bir joyda</div>
+            </div>
+            
+            <!-- User Info in Sidebar -->
+            <div class="user-sidebar-info" id="userSidebarInfo" style="display: none;">
+                <div class="user-sidebar-header">
+                    <div class="user-sidebar-avatar" id="userSidebarAvatar">K</div>
+                    <div class="user-sidebar-details">
+                        <div class="user-sidebar-name" id="userSidebarName">kamoliddin</div>
+                        <div class="user-sidebar-telegram" id="userSidebarTelegram" style="display: none;">
+                            <i class="fab fa-telegram"></i> @<span id="userSidebarTelegramText">kamolfrontdev</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="coins-sidebar-display">
+                    <div class="coins-sidebar-label">
+                        <i class="fas fa-wallet"></i> Sizning Stars hisobingiz
+                    </div>
+                    <div class="coins-sidebar-amount">
+                        <i class="fas fa-star"></i>
+                        <span id="userCoinsSidebar">12</span>
+                    </div>
+                    <button class="buy-coins-sidebar-btn" onclick="openCoinModal()">
+                        <i class="fas fa-star"></i> Star Sotib Olish
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Sidebar Auth/Logout Buttons -->
+            <div id="sidebarAuthOrLogout">
+                <button class="sidebar-auth-btn" onclick="openAuthModal()" id="sidebarAuthBtn">
+                    <i class="fas fa-user"></i>
+                    <span>Kirish / Ro'yxatdan o'tish</span>
+                </button>
+                <button class="sidebar-logout-btn" onclick="logout()" id="sidebarLogoutBtn" style="display: none;">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Chiqish</span>
+                </button>
+            </div>
+            
+            <!-- Sidebar Stats -->
+            <div class="sidebar-stats">
+                <div class="stat-sidebar-card">
+                    <div class="stat-sidebar-icon">
+                        <i class="fas fa-chess-board"></i>
+                    </div>
+                    <div class="stat-sidebar-content">
+                        <div class="stat-sidebar-value" id="sidebarTotalTournaments">0</div>
+                        <div class="stat-sidebar-label">Jami Turnirlar</div>
+                    </div>
+                </div>
+                
+                <div class="stat-sidebar-card">
+                    <div class="stat-sidebar-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-sidebar-content">
+                        <div class="stat-sidebar-value" id="sidebarUpcomingTournaments">0</div>
+                        <div class="stat-sidebar-label">Oldinda Turganlar</div>
+                    </div>
+                </div>
+                
+                <div class="stat-sidebar-card">
+                    <div class="stat-sidebar-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stat-sidebar-content">
+                        <div class="stat-sidebar-value" id="sidebarAverageFee">0$</div>
+                        <div class="stat-sidebar-label">O'rtacha Narx</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar Navigation -->
+            <div class="sidebar-navigation">
+                <a href="index.html" class="sidebar-nav-btn">
+                    <i class="fas fa-home"></i>
+                    <span>Bosh Sahifa</span>
+                </a>
+                
+                <a href="admin.html" class="sidebar-nav-btn">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admin Paneli</span>
+                </a>
+                
+                <a href="#!" class="sidebar-nav-btn">
+                    <i class="fas fa-history"></i>
+                    <span>Mening Turnirlarim</span>
+                </a>
+                
+                <a href="#!" class="sidebar-nav-btn">
+                    <i class="fas fa-star"></i>
+                    <span>Reyting</span>
+                </a>
+            </div>
+            
+            <button id="sidebarCollapseBtn" class="sidebar-collapse-btn" aria-label="Toggle sidebar">
+                <i class="fas fa-angle-left"></i>
+            </button>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <div class="main-content-wrapper">
+            <div class="container">
+                <header>
+                    <h1><i class="fas fa-trophy"></i> Turnirlar Ro'yxati</h1>
+                    <p class="subtitle">Barcha qo'shilgan turnirlar</p>
+                </header>
+                
+                <div class="tournaments-container" id="tournamentsList">
+                    <div class="loading" id="loading">
+                        <p>Turnirlar yuklanmoqda...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar overlay (shown when sidebar is open on small screens) -->
+    <div id="sidebarOverlay" class="sidebar-overlay" style="display:none;"></div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content auth-modal">
+            <button class="close-modal" onclick="closeAuthModal()">&times;</button>
+            <div class="modal-grid">
+                <div class="auth-visual">
+                    <div class="auth-visual-inner">
+                        <i class="fas fa-user-lock auth-icon"></i>
+                        <h3>Welcome to Turnirlar</h3>
+                        <p>Kirish yoki yangi hisob yarating — qatnashishni boshlang</p>
+                    </div>
+                </div>
+
+                <div class="auth-forms">
+                    <div class="modal-tabs">
+                        <div class="modal-tab active" onclick="showLoginForm()">Kirish</div>
+                        <div class="modal-tab" onclick="showRegisterForm()">Ro'yxatdan o'tish</div>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form id="loginForm" class="modal-form active">
+                        <div class="form-group input-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="loginEmail" placeholder="Email" required>
+                        </div>
+                        <div id="loginEmailError" class="error-message"></div>
+
+                        <div class="form-group input-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="loginPassword" placeholder="Parol" required>
+                        </div>
+                        <div id="loginPasswordError" class="error-message"></div>
+
+                        <button type="submit" class="modal-btn primary">
+                            <i class="fas fa-sign-in-alt"></i> Kirish
+                        </button>
+
+                        <div id="loginSuccess" class="success-message"></div>
+                    </form>
+
+                    <!-- Register Form -->
+                    <form id="registerForm" class="modal-form">
+                        <div class="form-group input-icon">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="registerName" placeholder="Ism Familiya" required>
+                        </div>
+                        <div id="registerNameError" class="error-message"></div>
+
+                        <div class="form-group input-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="registerEmail" placeholder="Email" required>
+                        </div>
+                        <div id="registerEmailError" class="error-message"></div>
+
+                        <div class="form-group input-icon telegram-input">
+                            <i class="fab fa-telegram-plane"></i>
+                            <div style="position: relative; width:100%;">
+                                <span class="telegram-prefix">t.me/</span>
+                                <input type="text" id="registerTelegram" placeholder="username" required>
+                            </div>
+                        </div>
+                        <div id="registerTelegramError" class="error-message"></div>
+
+                        <div class="form-group input-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="registerPassword" placeholder="Parol (kamida 6 belgi)" required>
+                        </div>
+                        <div id="registerPasswordError" class="error-message"></div>
+
+                        <div class="form-group input-icon">
+                            <i class="fas fa-check"></i>
+                            <input type="password" id="registerConfirmPassword" placeholder="Parolni tasdiqlang" required>
+                        </div>
+                        <div id="registerConfirmError" class="error-message"></div>
+
+                        <button type="submit" class="modal-btn primary">
+                            <i class="fas fa-user-plus"></i> Ro'yxatdan o'tish
+                        </button>
+
+                        <div id="registerSuccess" class="success-message"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coin Sotib Olish Modali -->
+    <div id="coinModal" class="coin-modal">
+        <div class="coin-modal-content">
+            <button class="close-coin-modal" onclick="closeCoinModal()">&times;</button>
+            
+            <div class="coin-modal-header">
+                <h2><i class="fas fa-coins"></i> Coin Sotib Olish</h2>
+                <p>Kerakli miqdordagi coinni tanlang va to'lov usulini tanlang</p>
+            </div>
+            
+            <div class="coin-options">
+                <div class="coin-option" onclick="selectCoinOption(100)">
+                    <div class="coin-amount-display">100</div>
+                    <div class="coin-price">$1.00</div>
+                    <div style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.6);">$0.01/coin</div>
+                </div>
+                <div class="coin-option" onclick="selectCoinOption(500)">
+                    <div class="coin-amount-display">500</div>
+                    <div class="coin-price">$4.50</div>
+                    <div style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.6);">$0.009/coin</div>
+                </div>
+                <div class="coin-option" onclick="selectCoinOption(1000)">
+                    <div class="coin-amount-display">1,000</div>
+                    <div class="coin-price">$8.00</div>
+                    <div style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.6);">$0.008/coin</div>
+                </div>
+                <div class="coin-option" onclick="selectCoinOption(5000)">
+                    <div class="coin-amount-display">5,000</div>
+                    <div class="coin-price">$35.00</div>
+                    <div style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.6);">$0.007/coin</div>
+                </div>
+            </div>
+            
+            <div class="coin-modal-methods">
+                <h3><i class="fas fa-credit-card"></i> To'lov Usuli</h3>
+                <div class="payment-methods">
+                    <div class="payment-method" onclick="selectPaymentMethod('admin')">
+                        <i class="fas fa-user-shield"></i>
+                        <div>
+                            <div class="method-name">Admin orqali</div>
+                            <div class="method-desc">@kamolfrontdev ga murojaat qiling</div>
+                        </div>
+                    </div>
+                    <div class="payment-method" onclick="selectPaymentMethod('click')">
+                        <i class="fas fa-mouse-pointer"></i>
+                        <div>
+                            <div class="method-name">Click orqali</div>
+                            <div class="method-desc">Tez kunda...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="paymentAction">
+                <!-- Bu joyda to'lov usuliga qarab tugma o'zgaradi -->
+            </div>
+        </div>
+    </div>
+
+   <script src="index.js"></script>
+</body>
+</html>

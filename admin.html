@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+</head>
+<body>
+    <!-- Participants Modal -->
+    <div id="participantsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-users"></i> Qatnashchilar Ro'yxati</h2>
+                <button class="close-modal" onclick="closeParticipantsModal()">&times;</button>
+            </div>
+            
+            <div id="participantsModalTitle" style="margin-bottom: 10px; color: #4fc3f7;"></div>
+            <div id="participantsCount" style="margin-bottom: 20px; color: #ffd700;"></div>
+            
+            <div id="participantsList" class="participants-list">
+                <!-- Qatnashchilar shu yerga yuklanadi -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Coin History Modal -->
+    <div id="coinHistoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-coins"></i> Coin Tarixi</h2>
+                <button class="close-modal" onclick="closeCoinHistoryModal()">&times;</button>
+            </div>
+            
+            <div id="coinHistoryTitle" style="margin-bottom: 10px; color: #4fc3f7;"></div>
+            <div id="totalCoins" style="margin-bottom: 20px; color: #ffd700; font-size: 1.2rem;"></div>
+            
+            <div id="coinHistoryList" class="participants-list">
+                <!-- Coin tarixi shu yerga yuklanadi -->
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-user-shield"></i> Admin Paneli</h1>
+            <p class="subtitle">Turnirlar, Userlar va Coins Boshqaruvi</p>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="add-tournament">
+                <i class="fas fa-plus-circle"></i> Turnir Qo'shish
+            </div>
+            <div class="tab" data-tab="manage-tournaments">
+                <i class="fas fa-list"></i> Turnirlarni Boshqarish
+            </div>
+            <div class="tab" data-tab="manage-users">
+                <i class="fas fa-users"></i> Userlarni Boshqarish
+            </div>
+            <div class="tab" data-tab="statistics">
+                <i class="fas fa-chart-bar"></i> Statistika
+            </div>
+            <div class="tab" data-tab="coin-management">
+                <i class="fas fa-coins"></i> Coin Boshqaruvi
+            </div>
+        </div>
+        
+        <!-- Add Tournament Tab -->
+        <div id="add-tournament" class="tab-content active">
+            <div class="form-container">
+                <form id="tournamentForm">
+                    <div class="form-group">
+                        <label for="tournamentName"><i class="fas fa-chess"></i> Turnir Nomi</label>
+                        <input type="text" id="tournamentName" placeholder="Masalan: Chempionlar Ligasi" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="tournamentDate"><i class="fas fa-calendar-alt"></i> Qachon Bo'lishi</label>
+                            <input type="datetime-local" id="tournamentDate" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="participationFee"><i class="fas fa-money-bill-wave"></i> Qatnashish Narxi ($)</label>
+                            <input type="number" id="participationFee" min="0" step="0.01" placeholder="0.00" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="prize"><i class="fas fa-gift"></i> Sovg'a (Mukofot)</label>
+                        <textarea id="prize" rows="3" placeholder="Turnir g'oliblari uchun sovg'alar..." required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn">
+                        <i class="fas fa-plus-circle"></i> Turnirni Qo'shish
+                    </button>
+                    
+                    <div id="successMessage" class="success-message">
+                        <i class="fas fa-check-circle" style="color: #4CAF50; font-size: 1.5rem;"></i>
+                        <div>
+                            <h3>Turnir muvaffaqiyatli qo'shildi!</h3>
+                            <p>Turnirlar ro'yxatini ko'rish uchun "Turnirlarni Boshqarish" bo'limiga o'ting.</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Manage Tournaments Tab -->
+        <div id="manage-tournaments" class="tab-content">
+            <div class="loading" id="loadingTournaments">
+                <p>Turnirlar yuklanmoqda...</p>
+            </div>
+            
+            <div class="tournaments-container" id="tournamentsList">
+                <!-- Turnirlar shu yerga yuklanadi -->
+            </div>
+            
+            <div class="empty-state" id="noTournamentsMessage" style="display: none;">
+                <i class="fas fa-trophy"></i>
+                <h3>Hozircha turnirlar mavjud emas</h3>
+                <p>Yangi turnir qo'shish uchun "Turnir Qo'shish" bo'limiga o'ting.</p>
+            </div>
+        </div>
+        
+        <!-- Manage Users Tab -->
+        <div id="manage-users" class="tab-content">
+            <div class="search-container">
+                <div class="search-input">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="userSearch" placeholder="User qidirish (ism, email, telegram)">
+                </div>
+            </div>
+            
+            <div class="loading" id="loadingUsers">
+                <p>Userlar yuklanmoqda...</p>
+            </div>
+            
+            <div class="users-container" id="usersList">
+                <!-- Userlar shu yerga yuklanadi -->
+            </div>
+            
+            <div class="empty-state" id="noUsersMessage" style="display: none;">
+                <i class="fas fa-users-slash"></i>
+                <h3>Hozircha userlar mavjud emas</h3>
+                <p>Userlar ro'yxati bo'sh</p>
+            </div>
+        </div>
+        
+        <!-- Statistics Tab -->
+        <div id="statistics" class="tab-content">
+            <div class="stats">
+                <div class="stat-card">
+                    <i class="fas fa-chess-board"></i>
+                    <h3 id="totalTournaments">0</h3>
+                    <p>Jami Turnirlar</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-calendar-check"></i>
+                    <h3 id="upcomingTournaments">0</h3>
+                    <p>Oldinda Turganlar</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <h3 id="totalUsers">0</h3>
+                    <p>Jami Userlar</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-coins"></i>
+                    <h3 id="totalCoinsStats">0</h3>
+                    <p>Jami Coins</p>
+                </div>
+            </div>
+            
+            <div class="form-container">
+                <h3 style="margin-bottom: 20px; color: #4fc3f7;">
+                    <i class="fas fa-trash-alt"></i> Barcha Turnirlarni O'chirish
+                </h3>
+                <p style="margin-bottom: 20px; color: #ff8a80;">
+                    <i class="fas fa-exclamation-triangle"></i> Ogohlantirish: Bu amalni orqaga qaytarib bo'lmaydi!
+                </p>
+                <button class="btn btn-danger" onclick="deleteAllTournaments()">
+                    <i class="fas fa-trash"></i> Barcha Turnirlarni O'chirish
+                </button>
+            </div>
+        </div>
+        
+        <!-- Coin Management Tab -->
+        <div id="coin-management" class="tab-content">
+            <div class="form-container">
+                <h3 style="margin-bottom: 20px; color: #ffd700;">
+                    <i class="fas fa-coins"></i> Barcha Userlarga Coin Berish
+                </h3>
+                
+                <div class="form-group">
+                    <label for="coinAmount"><i class="fas fa-coins"></i> Coin Miqdori</label>
+                    <input type="number" id="coinAmount" min="1" max="100000" placeholder="Beriladigan coin miqdori" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="coinReason"><i class="fas fa-comment"></i> Sabab (Izoh)</label>
+                    <textarea id="coinReason" rows="3" placeholder="Coin berish sababi (masalan: Faollik uchun, Turnir g'olibi, va h.k.)" required></textarea>
+                </div>
+                
+                <button class="btn btn-warning" onclick="addCoinsToAllUsers()">
+                    <i class="fas fa-coins"></i> Barcha Userlarga Coin Berish
+                </button>
+                
+                <div id="coinSuccessMessage" class="success-message" style="margin-top: 20px;">
+                    <i class="fas fa-check-circle" style="color: #4CAF50; font-size: 1.5rem;"></i>
+                    <div>
+                        <h3>Coins muvaffaqiyatli berildi!</h3>
+                        <p>Barcha userlarga coinlar qo'shildi.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-container" style="margin-top: 30px;">
+                <h3 style="margin-bottom: 20px; color: #ff5252;">
+                    <i class="fas fa-coins"></i> Coins Top 10
+                </h3>
+                
+                <div class="loading" id="loadingTopCoins">
+                    <p>Top 10 yuklanmoqda...</p>
+                </div>
+                
+                <div id="topCoinsList" style="margin-top: 20px;">
+                    <!-- Top 10 userlar shu yerga yuklanadi -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <a href="index.html" class="nav-btn">
+                <i class="fas fa-home"></i> Bosh Sahifaga Qaytish
+            </a>
+            <a href="#!" class="nav-btn" id="refreshBtn">
+                <i class="fas fa-sync-alt"></i> Yangilash
+            </a>
+        </div>
+    </div>
+
+    
+</body>
+</html>
