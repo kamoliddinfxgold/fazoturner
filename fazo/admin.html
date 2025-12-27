@@ -1,0 +1,205 @@
+
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Turner Reyting</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="firebase-config.js"></script>
+</head>
+<body class="admin-page">
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-crown"></i>
+                <span>Admin Panel</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="btn btn-outline"><i class="fas fa-home"></i> Asosiy Sahifa</a>
+                <a href="#" id="adminLogoutBtn" class="btn btn-outline"><i class="fas fa-sign-out-alt"></i> Chiqish</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="admin-main">
+        <!-- Admin Dashboard -->
+        <div class="admin-container">
+            <h1 class="admin-title"><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+            
+            <!-- Statistikalar -->
+            <div class="admin-stats">
+                <div class="admin-stat-card">
+                    <i class="fas fa-users"></i>
+                    <h3 id="adminUserCount">0</h3>
+                    <p>Foydalanuvchilar</p>
+                </div>
+                <div class="admin-stat-card">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3 id="adminTournamentCount">0</h3>
+                    <p>Turnirlar</p>
+                </div>
+                <div class="admin-stat-card">
+                    <i class="fas fa-coins"></i>
+                    <h3 id="adminTotalJc">0</h3>
+                    <p>Umumiy JC</p>
+                </div>
+            </div>
+
+            <!-- Yangi Turner Qo'shish -->
+            <div class="admin-section">
+                <h2><i class="fas fa-plus-circle"></i> Yangi Turner Qo'shish</h2>
+                <form id="addTournamentForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tournamentName">Turner Nomi</label>
+                            <input type="text" id="tournamentName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tournamentDate">Sana</label>
+                            <input type="date" id="tournamentDate" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tournamentEntryFee">Kirish to'lovi (JC)</label>
+                            <input type="number" id="tournamentEntryFee" min="0" value="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tournamentMaxPlayers">Maksimal qatnashuvchilar</label>
+                            <input type="number" id="tournamentMaxPlayers" min="1" value="10" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="tournamentDescription">Tavsif</label>
+                        <textarea id="tournamentDescription" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Turner Qo'shish</button>
+                </form>
+            </div>
+
+            <!-- Turnerlar Ro'yxati -->
+            <div class="admin-section">
+                <h2><i class="fas fa-list"></i> Barcha Turnerlar</h2>
+                <div class="tournaments-list" id="adminTournamentsList">
+                    <!-- Turnerlar shu yerga yuklanadi -->
+                </div>
+            </div>
+
+            <!-- Qatnashuvchilar Tafsilotlari -->
+            <div class="admin-section">
+                <h2><i class="fas fa-users"></i> Turner Qatnashuvchilari</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="selectTournamentForPlayers">Turnerni tanlang</label>
+                        <select id="selectTournamentForPlayers">
+                            <option value="">Turnerni tanlang</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="players-details-container">
+                    <div class="players-table">
+                        <table id="tournamentPlayersTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Ism</th>
+                                    <th>Email</th>
+                                    <th>Telefon</th>
+                                    <th>PUBG ID</th>
+                                    <th>JC Balansi</th>
+                                    <th>Qatnashish vaqti</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tournamentPlayersBody">
+                                <!-- Qatnashuvchilar shu yerga yuklanadi -->
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 2rem;">
+                                        Turnerni tanlang yoki qatnashuvchilar mavjud emas
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Foydalanuvchilarga JC Berish -->
+            <div class="admin-section">
+                <h2><i class="fas fa-coins"></i> Foydalanuvchilarga JC Berish</h2>
+                <form id="giveJcForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="userSelect">Foydalanuvchi</label>
+                            <select id="userSelect" required>
+                                <!-- Foydalanuvchilar shu yerga yuklanadi -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="jcAmount">JC Miqdori</label>
+                            <input type="number" id="jcAmount" min="1" max="1000" value="10" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="jcReason">Sabab (ixtiyoriy)</label>
+                            <select id="jcReason">
+                                <option value="">Tanlang</option>
+                                <option value="turner_g'alaba">Turner g'alabasi</option>
+                                <option value="faol_qatnashish">Faol qatnashish</option>
+                                <option value="yutuq">Maxsus yutuq</option>
+                                <option value="boshqa">Boshqa</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="jcComment">Izoh (ixtiyoriy)</label>
+                            <textarea id="jcComment" rows="2" placeholder="Qo'shimcha izoh..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-coins"></i> JC Berish</button>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" id="telegramJcBtn" class="btn btn-success">
+                                <i class="fab fa-telegram"></i> Telegram orqali JC berish
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Foydalanuvchilar Ro'yxati -->
+            <div class="admin-section">
+                <h2><i class="fas fa-users"></i> Foydalanuvchilar</h2>
+                <div class="users-list" id="adminUsersList">
+                    <!-- Foydalanuvchilar shu yerga yuklanadi -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Telegram JC Modal -->
+    <div class="modal" id="telegramJcModal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2><i class="fab fa-telegram"></i> Telegram orqali JC berish</h2>
+            <div class="telegram-info">
+                <p>Foydalanuvchiga JC berish uchun quyidagi Telegram botiga o'ting:</p>
+                <a href="https://t.me/kamolfrondev" target="_blank" class="btn btn-telegram">
+                    <i class="fab fa-telegram"></i> @kamolfrondev
+                </a>
+                <p class="note">Bot orqali kerakli miqdordagi JC ni foydalanuvchiga yuborishingiz mumkin.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

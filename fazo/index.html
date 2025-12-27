@@ -1,0 +1,179 @@
+
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turner Reyting Tizimi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="firebase-config.js"></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-trophy"></i>
+                <span>Turner Reyting</span>
+            </div>
+            <div class="nav-links" id="navLinks">
+                <a href="#" id="homeLink">Bosh Sahifa</a>
+                <a href="#" id="tournamentsLink">Turnirlar</a>
+                <a href="#" id="adminLink" class="admin-only">Admin Panel</a>
+                <div class="auth-buttons" id="authButtons">
+                    <button id="loginBtn" class="btn btn-outline">Kirish</button>
+                    <button id="registerBtn" class="btn btn-primary">Ro'yxatdan o'tish</button>
+                </div>
+                <div class="user-profile" id="userProfile">
+                    <div class="user-info">
+                        <span id="userName"></span>
+                        <div class="jc-balance">
+                            <i class="fas fa-coins"></i>
+                            <span id="jcBalance">0 JC</span>
+                        </div>
+                    </div>
+                    <button id="logoutBtn" class="btn btn-outline">Chiqish</button>
+                </div>
+            </div>
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Auth Modallari -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2><i class="fas fa-sign-in-alt"></i> Tizimga Kirish</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Parol</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Kirish</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2><i class="fas fa-user-plus"></i> Ro'yxatdan o'tish</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="registerName">Ism</label>
+                    <input type="text" id="registerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPhone">Telefon raqam</label>
+                    <input type="tel" id="registerPhone" placeholder="+998901234567" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPubgId">PUBG ID</label>
+                    <input type="text" id="registerPubgId" placeholder="PUBG ID yoki nickname" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Parol</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Ro'yxatdan o'tish</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JC Sotib Olish Modal -->
+    <div class="modal" id="buyJcModal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2><i class="fas fa-shopping-cart"></i> JC Sotib Olish</h2>
+            <div class="jc-packages" id="jcPackages">
+                <div class="jc-package" data-amount="10">
+                    <h3>10 JC</h3>
+                    <p class="price">20,000 UZS</p>
+                    <a href="https://t.me/Kamolfrontdev">Sotib Olish</a>
+                </div>
+                <div class="jc-package" data-amount="25">
+                    <h3>25 JC</h3>
+                    <p class="price">45,000 UZS</p>
+                    <a href="https://t.me/Kamolfrontdev">Sotib Olish</a>
+                </div>
+                <div class="jc-package" data-amount="50">
+                    <h3>50 JC</h3>
+                    <p class="price">60,000 UZS</p>
+                    <a href="https://t.me/Kamolfrontdev">Sotib Olish</a>
+                </div>
+                <div class="jc-package" data-amount="100">
+                    <h3>100 JC</h3>
+                    <p class="price">100,000 UZS</p>
+                    <a href="https://t.me/Kamolfrontdev">Sotib Olish</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Asosiy Kontent -->
+    <main>
+        <!-- Bosh Sahifa -->
+        <section id="homeSection" class="section active">
+            <div class="hero">
+                <div class="hero-content">
+                    <h1>Turner Reyting Tizimi</h1>
+                    <p>Turnirlarda qatnashib, JC to'plang va o'z reytingingizni oshiring!</p>
+                    <div class="hero-buttons">
+                        <button id="viewTournamentsBtn" class="btn btn-primary btn-large">Turnirlarni Ko'rish</button>
+                        <button id="buyJcBtn" class="btn btn-warning btn-large">
+                            <i class="fas fa-coins"></i> JC Sotib Olish
+                        </button>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <i class="fas fa-coins"></i>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3 id="tournamentCount">0</h3>
+                    <p>Faol Turnirlar</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-users"></i>
+                    <h3 id="userCount">0</h3>
+                    <p>Foydalanuvchilar</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-coins"></i>
+                    <h3 id="totalJc">0</h3>
+                    <p>Umumiy JC</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Turnirlar -->
+        <section id="tournamentsSection" class="section">
+            <h2 class="section-title">Barcha Turnirlar</h2>
+            <div class="tournaments-container" id="tournamentsContainer">
+                <!-- Turnirlar shu yerga yuklanadi -->
+            </div>
+        </section>
+    </main>
+
+    
+    <script src="app.js"></script>
+</body>
+</html>
